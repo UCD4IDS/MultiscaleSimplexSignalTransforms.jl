@@ -1,0 +1,11 @@
+saved/
+Manifest.toml
+
+.vscode
+
+# this file is too large for github; if you don't have it hopefully it'll be downloaded
+# automatically when it's needed
+data/tl_2014_us_county/tl_2014_us_county.shp
+data/minnesota/minnesota.json
+
+nbs/*backup*
