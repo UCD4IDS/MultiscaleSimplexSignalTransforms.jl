@@ -297,20 +297,22 @@ nlin = 50
 # ╔═╡ ff2bfce6-481f-4b1d-82d0-f1ebb9df615b
 preg, ppart, ppos, pk = wiggles(nlin, 1, true, false)
 
+# ╔═╡ d5cb6bb8-80be-4e92-9471-4dfed8ec0978
+Lpath, Xpath = eigen(Matrix(k_laplacian(ZeroRegion(preg.tree))));
+
 # ╔═╡ 21c2e289-41d9-4391-b38e-04c41a24849e
 @chain begin
 plot(
-	splot_many(preg, ppos, [
-		ppart[0,0,i]
+	splot_many(ZeroRegion(preg.tree), ppos, [
+	# splot_many(preg, ppos, [
+		Xpath[:,i+2]
+		# ppart[0,0,i]
 		for i∈0:14
-	]...; k=pk, size=5, palette=:viridis);
+	]...; k=0, size=5, palette=:viridis);
 	size=(600,1000)
 )
-# @aside savefig("/Users/eug/Desktop/path-lower-dc-nat.png")
+# @aside savefig("/Users/eug/Desktop/path-zero.png")
 end
-
-# ╔═╡ d5cb6bb8-80be-4e92-9471-4dfed8ec0978
-
 
 # ╔═╡ 2839684e-3bec-4201-a225-5fdb267de92d
 @chain begin

@@ -63,7 +63,7 @@ function splot(
 end
 
 function splot(
-	region::ZeroRegion, f::AbstractVector{R};
+	c_edges::Vector, f::AbstractVector{R};
 	k::Int=0, xs::Vector{S}, ys::Vector{S},
 	clims=nothing,
 	size=nothing,
@@ -73,7 +73,6 @@ function splot(
 ) where {R<:Real, S<:Real}
 	@assert k==0 "can only plot nodes for a 0-complex"
 	
-	c_edges = map(e -> Tuple(e)[1:2], edges(region.weights))
 	e_coor = [ [ (xs[i], ys[i]) for i∈e ] for e ∈ c_edges ]
 
 	size = ifelse(
@@ -131,14 +130,30 @@ function splot_many(
 		(boundaries(region), simplices(region))
 	c_vertices = first.(simplices(region.tree, 0))
 	nf = length(fs)
-	nv = length(simplices(region.tree, 0))
-	repeatsimp(cs, repval=nv) = [ c .+ (i-1)*repval for i ∈ 1:nf for c ∈ cs ]
+	nvert = length(simplices(region.tree, 0))
+	repeatsimp(cs, repval=nvert) = [ c .+ (i-1)*repval for i ∈ 1:nf for c ∈ cs ]
 
 	splot(
 		repeatsimp.([c_vertices, c_edges, c_triangles])...,
 		[ fi for f ∈ fs for fi ∈ f ];
 		xs=repeat(xs, nf),
 		ys=repeatsimp(ys, -3), 
+		k, kwargs...
+	)
+end
+
+function splot_many(
+	region::ZeroRegion, fs::AbstractVector{R}...; xs, ys, k=0, kwargs...
+) where R<:Real
+	c_edges = map(e -> Tuple(e)[1:2], edges(region.weights))
+	nf = length(fs)
+	repeatsimp(cs, repval=nv(region.weights)) = [ c .+ (i-1)*repval for i ∈ 1:nf for c ∈ cs]
+
+	splot(
+		repeatsimp(c_edges),
+		[ fi for f ∈ fs for fi ∈ f];
+		xs = repeat(xs, nf),
+		ys = repeatsimp(ys, -3),
 		k, kwargs...
 	)
 end
