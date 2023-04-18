@@ -111,7 +111,7 @@ splot(
 ) where {R<:Region, S<:Real} = splot(region, f; xs=pos.x, ys=pos.y, kwargs...)
 
 function splot(
-	region::KRegion{KL, K}, f::Vector{R}; k=KL, kwargs...
+	region::KRegion{KL, K}, f::AbstractVector{R}; k=KL, kwargs...
 ) where {KL, K, R<:Real}
 	@assert K ∈ (2,3) "need both edges and triangles in the complex"
 	c_edges, c_triangles = K==2 ?
@@ -120,6 +120,12 @@ function splot(
 	c_vertices = first.(simplices(region.tree, 0))
 	splot(c_vertices, c_edges, c_triangles, f; k, kwargs...)
 end
+
+splot(
+	region::ZeroRegion, f::AbstractVector{R}; k=0, kwargs...
+) where R<:Real = splot(
+	map(e -> Tuple(e)[1:2], edges(region.weights)), f; k, kwargs...
+)
 
 function splot_many(
 	region::KRegion{KL, K}, fs::AbstractVector{R}...; xs, ys, k=KL, kwargs...

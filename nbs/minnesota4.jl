@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.22
+# v0.19.23
 
 using Markdown
 using InteractiveUtils
@@ -295,23 +295,31 @@ end
 nlin = 50
 
 # ╔═╡ ff2bfce6-481f-4b1d-82d0-f1ebb9df615b
-preg, ppart, ppos, pk = wiggles(nlin, 1, true, false)
-
-# ╔═╡ d5cb6bb8-80be-4e92-9471-4dfed8ec0978
-Lpath, Xpath = eigen(Matrix(k_laplacian(ZeroRegion(preg.tree))));
+preg, ppart, ppos, pk = wiggles(nlin, 1, true, true)
 
 # ╔═╡ 21c2e289-41d9-4391-b38e-04c41a24849e
 @chain begin
-plot(
-	splot_many(ZeroRegion(preg.tree), ppos, [
-	# splot_many(preg, ppos, [
-		Xpath[:,i+2]
-		# ppart[0,0,i]
-		for i∈0:14
-	]...; k=0, size=5, palette=:viridis);
-	size=(600,1000)
-)
-# @aside savefig("/Users/eug/Desktop/path-zero.png")
+	# maximum(abs.(Xpath[:,1:15]))
+	plot(
+		# splot_many(ZeroRegion(preg.tree), ppos, [
+		splot_many(preg, ppos, [
+			# Xpath[:,i+1]
+			ppart[0,0,i]
+			for i∈0:14
+		] .* sign.([ppart[0,0,i][1] for i ∈ 0:14]) ...;
+		# k=0,
+		k=pk,
+		size=3, palette=:viridis);
+		size=(600,1000), 
+		# clims=0.5.*(-_,_)
+	)
+	# @aside savefig("/Users/eug/Desktop/path-two.png")
+end
+
+# ╔═╡ d5cb6bb8-80be-4e92-9471-4dfed8ec0978
+Lpath, Xpath = @chain begin
+	eigen(Matrix(k_laplacian(ZeroRegion(preg.tree))))
+	(_.values, _.vectors .* _.vectors[1,:]')
 end
 
 # ╔═╡ 2839684e-3bec-4201-a225-5fdb267de92d
