@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.22
+# v0.19.25
 
 using Markdown
 using InteractiveUtils
@@ -152,10 +152,6 @@ unitmap(x) = extrema(x) |> mM -> (x.-mM[1]) ./ (mM[2]-mM[1])
 # ╠═ab7b185f-25e6-4979-a4d9-13b0051e1c78
 # ╠═5e30a6d0-0a09-4cc9-a12c-d3ddece4aca4
 # ╠═c1288024-92ac-40f9-90f9-58618da52929
-# ╠═72e65224-9ec4-4db8-892a-e7b60f448dcc
 # ╠═70e826d3-72b8-46dc-adb7-253ea22945f6
-# ╠═0ed761b7-1177-441c-b13b-5621e9ce765d
-# ╠═6060bb1e-5f44-4dfa-95a1-1849df044490
 # ╠═6a42dbd3-ae89-4d08-a289-c6f324241125
-# ╠═aa77d1c4-3a48-4366-b473-4d61d56c7f30
 # ╠═d97937cb-7234-4963-9b44-be68dc972306

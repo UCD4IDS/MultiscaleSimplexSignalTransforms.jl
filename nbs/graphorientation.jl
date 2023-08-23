@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.22
+# v0.19.23
 
 using Markdown
 using InteractiveUtils
@@ -41,6 +41,15 @@ xs, ys = A["xyz100"] |> M -> (M[:,1], M[:,2])
 # ╔═╡ 68b4d504-c8d1-4e85-89a2-fe394866a99e
 sc = cliquecomplex(g);
 
+# ╔═╡ 5fe9fab9-293b-40d5-95dd-4f6a1acce945
+zr = ZeroRegion(sc)
+
+# ╔═╡ 73dcf165-0d63-48de-bb66-48e41c673b52
+zpart = kHGLET(zr)
+
+# ╔═╡ 3ca7d5cb-19a1-4b29-b113-dfc3ef9b52d7
+
+
 # ╔═╡ b3851a78-fd4d-40d4-96d5-6f6ae801b0d2
 k = 1
 
@@ -79,6 +88,9 @@ plot(l)
 
 # ╔═╡ e5ada405-8d0d-4bb1-96bf-a7bcf538afe4
 pos = Pos(xs, ys)
+
+# ╔═╡ f8a04b4a-4ccc-4cd1-8d58-fdccad1f21a8
+@chain splot(zr, zpart[0,0,1], pos) _ #@aside savefig("/Users/eug/Desktop/fiedler-neuron.png")
 
 # ╔═╡ f483ea63-5858-4cb8-af27-38e019bc1994
 splot(reg, sign.(fourier[:,1]).*fourier[:,4], pos; k=1)
@@ -228,6 +240,10 @@ end
 # ╠═49f92ad5-9f91-418a-8d6b-153cb14db7d3
 # ╠═812a9e14-8a7e-47a5-b6cb-6cfc21f36d45
 # ╠═68b4d504-c8d1-4e85-89a2-fe394866a99e
+# ╠═5fe9fab9-293b-40d5-95dd-4f6a1acce945
+# ╠═73dcf165-0d63-48de-bb66-48e41c673b52
+# ╠═f8a04b4a-4ccc-4cd1-8d58-fdccad1f21a8
+# ╠═3ca7d5cb-19a1-4b29-b113-dfc3ef9b52d7
 # ╠═b3851a78-fd4d-40d4-96d5-6f6ae801b0d2
 # ╠═e58b6dc0-2a39-4970-acf8-8317187ae822
 # ╠═0f040b63-9c2d-4806-b1bf-b43dcb30894d

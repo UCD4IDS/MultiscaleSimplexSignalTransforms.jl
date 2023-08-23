@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.22
+# v0.19.25
 
 using Markdown
 using InteractiveUtils
@@ -45,6 +45,20 @@ img = whichcol(colorimg)
 @chain begin
 	colorview(Gray, whichcol(colorimg))
 	# @aside save("/Users/eug/Desktop/woman-gray.png", _)
+end
+
+# ╔═╡ e042f078-234d-4597-9f55-9c5df90ec9e8
+@chain begin
+splot(
+	KRegion(a, 2; weakadjweight=1.0), 
+	tri_vals, pos; k=2, palette=:greys, notribds=true)
+# @aside savefig("/Users/eug/Desktop/woman-signal2.png")
+end
+
+# ╔═╡ 2bfc5b15-e8d6-4228-8321-d0f24cd1ac66
+@chain begin
+	splot(KRegion(a, 1), edge_vals, pos; k=1, palette=:greys, size=4)
+	# @aside savefig("/Users/eug/Desktop/woman-signal1.png")
 end
 
 # ╔═╡ e5d523a1-d65c-4f0f-83e4-594e2bb45c49
@@ -111,22 +125,8 @@ length(simplices(a, 2))
 # ╔═╡ 7ede916f-2f62-4d83-a9f4-b28a1c4ef5b2
 edge_vals = [mean(vertex_vals[v] for v ∈ e) for e ∈ simplices(a, 1) ]
 
-# ╔═╡ 2bfc5b15-e8d6-4228-8321-d0f24cd1ac66
-@chain begin
-	splot(KRegion(a, 1), edge_vals, pos; k=1, palette=:greys, size=4)
-	# @aside savefig("/Users/eug/Desktop/woman-signal1.png")
-end
-
 # ╔═╡ 659dced8-7aea-49da-981f-504aa9dcb643
 tri_vals = [mean(vertex_vals[v] for v ∈ t) for t ∈ simplices(a, 2) ]
-
-# ╔═╡ e042f078-234d-4597-9f55-9c5df90ec9e8
-@chain begin
-splot(
-	KRegion(a, 2; weakadjweight=1.0), 
-	tri_vals, pos; k=2, palette=:greys, notribds=true)
-# @aside savefig("/Users/eug/Desktop/woman-signal2.png")
-end
 
 # ╔═╡ 8f55a67e-dbd5-4f45-9858-dc95721a28df
 keepfracs = [.01, .05, .1, .25, .5, .75, .9]
@@ -165,34 +165,6 @@ n_bd(R)
 	for k ∈ 1:length(o)
 	if o[k] < n_simp(R)-1 && (k==length(o) || o[k+1] > o[k]+1)
 ])]
-
-# ╔═╡ 3711f89d-7249-48db-a70e-d60955e1a10c
-length(tri_vals)
-
-# ╔═╡ bfd9054a-7f46-4e10-a7de-cf926d5f9cb2
-# gbb = reduce(hcat, [
-# 	G[j,k,:]
-# 	for (j,k) ∈ best_basis(G, k==1 ? edge_vals : tri_vals).locs
-# ])
-
-# ╔═╡ e19dd2b3-189f-473d-839c-5b2891da41ee
-function loc_repr(part, bb)
-	basis = fill(0.0, partlen(root(part)), 0)
-	coefs = Float64[]
-	dfs(root(part)) do tsn
-		for (tag, fval) ∈ get(bb, tsn.node.sinds, Dict())
-			basis = hcat(basis, val(tsn.node.fvals[tag]))
-			push!(coefs, val(fval))
-		end
-	end
-	(basis, coefs)
-end
-
-# ╔═╡ 2fd2e5bf-bd4c-4680-ad21-7bf45f804539
-gbb, gbbcoef = loc_repr(G, alt_best_basis(G, k==1 ? edge_vals : tri_vals; p=0.5))
-
-# ╔═╡ 2768dc6d-2c48-44cb-969a-fe2b16e68640
-hbb, hbbcoef = loc_repr(H, alt_best_basis(H, k==1 ? edge_vals : tri_vals; p=0.01))
 
 # ╔═╡ 4c8b8a92-c1f8-4eee-bb03-12b89c5e94ae
 getbasis(name) = @match name begin
@@ -261,6 +233,34 @@ MM = reduce(hcat, M) |> m -> m ./ m[1,:]'
 	]..., layout=(1,2), size=(1600,600), leftmargin=10Plots.mm)
 	# @aside savefig("/Users/eug/Desktop/woman-approx-k$k.png")
 end
+
+# ╔═╡ 3711f89d-7249-48db-a70e-d60955e1a10c
+length(tri_vals)
+
+# ╔═╡ bfd9054a-7f46-4e10-a7de-cf926d5f9cb2
+# gbb = reduce(hcat, [
+# 	G[j,k,:]
+# 	for (j,k) ∈ best_basis(G, k==1 ? edge_vals : tri_vals).locs
+# ])
+
+# ╔═╡ e19dd2b3-189f-473d-839c-5b2891da41ee
+function loc_repr(part, bb)
+	basis = fill(0.0, partlen(root(part)), 0)
+	coefs = Float64[]
+	dfs(root(part)) do tsn
+		for (tag, fval) ∈ get(bb, tsn.node.sinds, Dict())
+			basis = hcat(basis, val(tsn.node.fvals[tag]))
+			push!(coefs, val(fval))
+		end
+	end
+	(basis, coefs)
+end
+
+# ╔═╡ 2fd2e5bf-bd4c-4680-ad21-7bf45f804539
+gbb, gbbcoef = loc_repr(G, alt_best_basis(G, k==1 ? edge_vals : tri_vals; p=0.5))
+
+# ╔═╡ 2768dc6d-2c48-44cb-969a-fe2b16e68640
+hbb, hbbcoef = loc_repr(H, alt_best_basis(H, k==1 ? edge_vals : tri_vals; p=0.01))
 
 # ╔═╡ 9b51e143-b432-4783-95fe-b3110ab0d4da
 (function()
