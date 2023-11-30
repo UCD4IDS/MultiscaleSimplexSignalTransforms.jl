@@ -19,9 +19,9 @@ struct SubmatrixPartition{M<:AbstractMatrix} <: SCPartition
         repr_kwargs...
     ) where {R<:Region}
         M = @match representation begin
-            Representation.KLaplacian => k_laplacian(region; normalization, repr_kwargs...)
+            $(Representation.KLaplacian) => k_laplacian(region; normalization, repr_kwargs...)
             # Representation.Distance => distance_kernel(region; normalization, repr_kwargs...)
-            Representation.Distance => error("can't use Submatrix Subrepresentation on a Distance Representation")
+            $(Representation.Distance) => error("can't use Submatrix Subrepresentation on a Distance Representation")
         end
         new{typeof(M)}(PartitionTree(n_simp(region)), M, representation, basis, input, method, eigenmethod)
     end
@@ -37,22 +37,22 @@ function _partition!(part::SubmatrixPartition, node::PartitionTree)
     # ccs = connected_components(Graph(M))
     # if length(ccs) > 1
     #     # @info "disconnected $(length(ccs))"
-	# 	return PartitionOutput(part_components(ccs))
-	# end
+    # 	return PartitionOutput(part_components(ccs))
+    # end
 
     vals, basis, eignum = fiedler_eigs(part.representation, part.basis, part.eigenmethod)(M)
 
     modbasis = copy(basis) |> B -> @match part.input begin
-        PartitionInput.Identity => B
-        PartitionInput.DCOrientation => dc_orientation(B)
+        $(PartitionInput.Identity) => B
+        $(PartitionInput.DCOrientation) => dc_orientation(B)
     end
 
     PartitionOutput(;
         vals,
-        basis = modbasis,
-        parts = @match part.method begin
-            PartitionMethod.FiedlerSign => part_by_sign(modbasis[:,eignum])
-            PartitionMethod.Kmeans => part_by_kmeans(modbasis[:,1:eignum])
+        basis=modbasis,
+        parts=@match part.method begin
+            $(PartitionMethod.FiedlerSign) => part_by_sign(modbasis[:, eignum])
+            $(PartitionMethod.Kmeans) => part_by_kmeans(modbasis[:, 1:eignum])
         end
     )
 end

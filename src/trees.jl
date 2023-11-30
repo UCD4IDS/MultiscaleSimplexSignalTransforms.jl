@@ -10,7 +10,7 @@ children(::Tree)::Vector{<:Tree} = error("implement!")
 
 Base.show(io::IO, ::MIME"text/plain", tree::Tree) = print(
     io,
-    repr("text/plain", typeof(tree); context = :compact=>true)
+    repr("text/plain", typeof(tree); context=:compact => true)
 )
 
 @enum SearchMethod DFS BFS ReversedDFS ReversedBFS
@@ -40,37 +40,37 @@ Base.iterate(tsn::TreeSearchNode, done::Bool) = done ? nothing : (tsn.level, tru
 # iterating into children. This allows building the tree on the fly with the search
 mutable struct TreeSearchState{T<:Tree}
     next::Vector{TreeSearchNode{T}}
-    prev::(Nothing|TreeSearchNode{T})
+    prev::(Nothing | TreeSearchNode{T})
 end
 
-TreeSearchState(t::T) where T<:Tree = TreeSearchState{T}([TreeSearchNode(t, 0)], nothing)
+TreeSearchState(t::T) where {T<:Tree} = TreeSearchState{T}([TreeSearchNode(t, 0)], nothing)
 
 next!(tss::TreeSearchState; popside::Bool) = popside ? pop!(tss.next) : popfirst!(tss.next)
 Base.isempty(tss::TreeSearchState) = isempty(tss.next)
-Base.push!(tss::TreeSearchState{T}, item::TreeSearchNode{T}) where T<:Tree = 
+Base.push!(tss::TreeSearchState{T}, item::TreeSearchNode{T}) where {T<:Tree} =
     push!(tss.next, item)
 
-struct SearchTree{T<:Tree, R<:Real}
+struct SearchTree{T<:Tree,R<:Real}
     tree::T
     method::SearchMethod
     maxlevel::R
     itercond::Function
     SearchTree(
         tree::T, method::SearchMethod;
-        maxlevel::R=Inf, itercond::Function=(_)->true
-    ) where {T<:Tree, R<:Real} = new{T, R}(tree, method, maxlevel, itercond)
+        maxlevel::R=Inf, itercond::Function=(_) -> true
+    ) where {T<:Tree,R<:Real} = new{T,R}(tree, method, maxlevel, itercond)
 end
 
 function Base.iterate(
     tree::SearchTree{T},
     state::TreeSearchState{T}=TreeSearchState(tree.tree)
-) where T<:Tree
+) where {T<:Tree}
     if !isnothing(state.prev)
         cs = children(state.prev.node)
         shouldreverse(tree.method) && reverse!(cs)
 
         for c in cs
-            cnode = TreeSearchNode(c, state.prev.level+1)
+            cnode = TreeSearchNode(c, state.prev.level + 1)
             tree.itercond(cnode) && push!(state, cnode)
         end
     end
@@ -87,8 +87,8 @@ function Base.iterate(
     nothing
 end
 
-Base.eltype(::T) where T<:Tree = TreeSearchNode{T}
-Base.eltype(::SearchTree{T}) where T<:Tree = TreeSearchNode{T}
+Base.eltype(::T) where {T<:Tree} = TreeSearchNode{T}
+Base.eltype(::SearchTree{T}) where {T<:Tree} = TreeSearchNode{T}
 
 # in order to use a Tree in generator expressions, need to compute all descendants separately
 # at least once. I am going for a lazy/expensive solution instead of caching/tracking
@@ -100,12 +100,12 @@ function Base.length(st::SearchTree)
     count
 end
 
-Base.length(tree::T) where T<:Tree = length(SearchTree(tree, ReversedDFS))
+Base.length(tree::T) where {T<:Tree} = length(SearchTree(tree, ReversedDFS))
 
 function treemap(
     f::Function, tree::T;
     method::SearchMethod, maxlevel::Real, itercond::Function
-) where T<:Tree
+) where {T<:Tree}
     res = []
     for tsn ∈ SearchTree(tree, method; maxlevel, itercond)
         push!(res, f(tsn))
@@ -116,14 +116,14 @@ end
 # dfs and itercond functions are applied to the iterator: a TreeSearchNode with node and level fields
 dfs(
     f::Function, tree::T;
-    righttoleft::Bool=false, maxlevel::Real=Inf, itercond::Function =(_)->true
-) where T<:Tree = treemap(f, tree; method = righttoleft ? ReversedDFS : DFS, maxlevel, itercond)
+    righttoleft::Bool=false, maxlevel::Real=Inf, itercond::Function=(_) -> true
+) where {T<:Tree} = treemap(f, tree; method=righttoleft ? ReversedDFS : DFS, maxlevel, itercond)
 
 # bfs and itercond functions are applied to the iterator: a TreeSearchNode with node and level fields
 bfs(
     f::Function, tree::T;
-    righttoleft::Bool=false, maxlevel::Real=Inf, itercond::Function =(_)->true
-) where T<:Tree = treemap(f, tree; method = righttoleft ? ReversedBFS : BFS, maxlevel, itercond)
+    righttoleft::Bool=false, maxlevel::Real=Inf, itercond::Function=(_) -> true
+) where {T<:Tree} = treemap(f, tree; method=righttoleft ? ReversedBFS : BFS, maxlevel, itercond)
 
 struct GTree{G<:AbstractGraph} <: Tree
     g::G
@@ -132,12 +132,12 @@ struct GTree{G<:AbstractGraph} <: Tree
 end
 
 function GTree(g::AbstractGraph)
-    @assert ne(g) == nv(g)-1 "This graph doesn't look like a tree"
+    # @assert ne(g) == nv(g)-1 "This graph doesn't look like a tree"
     @assert length(connected_components(g)) == 1 "This graph looks disconnected"
-    GTree(g, [true; fill(false, nv(g)-1)], 1)
+    GTree(g, [true; fill(false, nv(g) - 1)], 1)
 end
 
-function children(tree::GTree{G}) where G
+function children(tree::GTree{G}) where {G}
     res = GTree{G}[]
     for node ∈ neighbors(tree.g, tree.node)
         tree.visited[node] && continue

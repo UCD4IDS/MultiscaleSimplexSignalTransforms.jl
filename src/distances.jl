@@ -3,8 +3,8 @@ export
     distance_kernel,
     dijkstra,
     censored_distmat, distmat
-    
-struct Sandwich{T<:Real, X<:AbstractMatrix{T}, V<:AbstractVector{T}} <: AbstractMatrix{T}
+
+struct Sandwich{T<:Real,X<:AbstractMatrix{T},V<:AbstractVector{T}} <: AbstractMatrix{T}
     M::X
     p::V
     u::V
@@ -12,41 +12,41 @@ struct Sandwich{T<:Real, X<:AbstractMatrix{T}, V<:AbstractVector{T}} <: Abstract
     s::Float64
     function Sandwich(M, v=ones(size(M, 1)))
         p = v ./ norm(v)
-        u = M*p
-        v = M'*p
-        new{eltype(M), typeof(M), typeof(p)}(M, p, u, v, u'*p)
+        u = M * p
+        v = M' * p
+        new{eltype(M),typeof(M),typeof(p)}(M, p, u, v, u' * p)
     end
 end
 
 Base.show(io::IO, ::MIME"text/plain", A::Sandwich) = print(io, join([
-    join(string.(size(A)), '×'),
-    repr("text/plain", typeof(A); context = :compact=>true)
-], ' '))
+        join(string.(size(A)), '×'),
+        repr("text/plain", typeof(A); context=:compact => true)
+    ], ' '))
 
 function LinearAlgebra.mul!(y, A::Sandwich, x)
-    px = A.p'*x
-    vx = A.v'*x
-    y = A.M*x + (A.s * px - vx) .* A.p - px .* A.u
+    px = A.p' * x
+    vx = A.v' * x
+    y = A.M * x + (A.s * px - vx) .* A.p - px .* A.u
 end
 
 Base.size(A::Sandwich) = size(A.M)
-Base.getindex(A::Sandwich, i, j) = A.M[i,j] + (A.s * A.p[j] - A.v[j]) * A.p[i] - A.p[j] * A.u[i]
+Base.getindex(A::Sandwich, i, j) = A.M[i, j] + (A.s * A.p[j] - A.v[j]) * A.p[i] - A.p[j] * A.u[i]
 LinearAlgebra.issymmetric(A::Sandwich) = issymmetric(A.M)
 SparseArrays.nnz(A::Sandwich) = nnz(A.M)
-SparseArrays.nnz(A::Sandwich{T, S}) where {T, S<:Symmetric} = nnz(parent(A.M))
+SparseArrays.nnz(A::Sandwich{T,S}) where {T,S<:Symmetric} = nnz(parent(A.M))
 Arpack.eigs(A::Sandwich; kwargs...) = issymmetric(A) ?
-    eigs(Symmetric(A); kwargs...) :
-    error("for some reason asymmetric eigs output incorrect values, so this is disabled")
+                                      eigs(Symmetric(A); kwargs...) :
+                                      error("for some reason asymmetric eigs output incorrect values, so this is disabled")
 
 # why are these not already in SparseArrays??
-SparseArrays.nnz(M::Symmetric{T, S}) where {T, S<:AbstractSparseArray} = nnz(parent(M))
-SparseArrays.nonzeros(M::Symmetric{T, S}) where {T, S<:AbstractSparseArray} = nonzeros(parent(M))
+SparseArrays.nnz(M::Symmetric{T,S}) where {T,S<:AbstractSparseArray} = nnz(parent(M))
+SparseArrays.nonzeros(M::Symmetric{T,S}) where {T,S<:AbstractSparseArray} = nonzeros(parent(M))
 
 function dijkstra(
     g::AbstractGraph,
     src::Int,
     distmx::AbstractMatrix=Graphs.weights(g);
-    dmax = Inf
+    dmax=Inf
 )
     dmax = Float64(dmax)
     dists = sparsevec([src], [0.0], nv(g))
@@ -65,7 +65,7 @@ function dijkstra(
             end
         end
     end
-    
+
     dists
 end
 
@@ -84,7 +84,7 @@ function censored_distmat(g::AbstractGraph, dmax::Real)
     reduce(
         hcat,
         (
-            findnz(dists) |> nzds -> sparsevec(nzds[1], dmax.-nzds[2], nvg)
+            findnz(dists) |> nzds -> sparsevec(nzds[1], dmax .- nzds[2], nvg)
             for dists ∈ (dijkstra(g, i; dmax) for i ∈ 1:nvg)
         )
     )
@@ -96,16 +96,16 @@ distance_kernel(region::Region; kwargs...) = error("can only use Representation.
 
 function distance_kernel(
     region::ZeroRegion;
-    subregion_inds::(Nothing|Vector{Int})=nothing,
+    subregion_inds::(Nothing | Vector{Int})=nothing,
     normalization::Normalization.T=Normalization.Weighted,
     withdistmat=false,
-    dmax = Inf
+    dmax=Inf
 )
     W = @chain Graphs.weights(region.weights) begin
         ifelse.(
-            _.==0,
+            _ .== 0,
             0.0,
-            normalization == Normalization.Combinatorial ? 1.0 : _.^-1
+            normalization == Normalization.Combinatorial ? 1.0 : _ .^ -1
         )
         isnothing(subregion_inds) ? _ : _[subregion_inds, subregion_inds]
         Symmetric
@@ -113,13 +113,13 @@ function distance_kernel(
 
     K = 0.5 * (isinf(dmax) ? -distmat(W) : censored_distmat(W, dmax)) |> Symmetric
 
-    d = Vector(sum(W, dims=2)[:]).^0.5
+    d = Vector(sum(W, dims=2)[:]) .^ 0.5
     D = Diagonal(d)
 
-    norm(d)==0 && error("uh oh bad degree vector for $(size(region.weights))")
+    norm(d) == 0 && error("uh oh bad degree vector for $(size(region.weights))")
 
     kernel = @match normalization begin
-        Normalization.Symmetric => Sandwich(Symmetric(D*K*D), d)
+        $(Normalization.Symmetric) => Sandwich(Symmetric(D * K * D), d)
         _ => Sandwich(K)
     end
 
