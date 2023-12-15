@@ -50,6 +50,9 @@ zr = ZeroRegion(sc)
 # ╔═╡ 73dcf165-0d63-48de-bb66-48e41c673b52
 zpart = kHGLET(zr)
 
+# ╔═╡ f8a04b4a-4ccc-4cd1-8d58-fdccad1f21a8
+@chain splot(zr, zpart[0,0,1], pos) _ #@aside savefig("/Users/eug/Desktop/fiedler-neuron.png")
+
 # ╔═╡ 3ca7d5cb-19a1-4b29-b113-dfc3ef9b52d7
 
 
@@ -91,9 +94,6 @@ plot(l)
 
 # ╔═╡ e5ada405-8d0d-4bb1-96bf-a7bcf538afe4
 pos = Pos(xs, ys)
-
-# ╔═╡ f8a04b4a-4ccc-4cd1-8d58-fdccad1f21a8
-@chain splot(zr, zpart[0,0,1], pos) _ #@aside savefig("/Users/eug/Desktop/fiedler-neuron.png")
 
 # ╔═╡ f483ea63-5858-4cb8-af27-38e019bc1994
 splot(reg, sign.(fourier[:,1]).*fourier[:,4], pos; k=1)

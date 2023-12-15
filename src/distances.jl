@@ -72,7 +72,7 @@ end
 distmat(g::AbstractGraph; dmax=Inf) = reduce(
     hcat,
     (dijkstra(g, i; dmax) for i ∈ 1:nv(g))
-)
+)'
 
 distmat(W::AbstractMatrix; dmax=Inf) = distmat(SimpleWeightedGraph(W); dmax)
 
@@ -87,7 +87,7 @@ function censored_distmat(g::AbstractGraph, dmax::Real)
             findnz(dists) |> nzds -> sparsevec(nzds[1], dmax .- nzds[2], nvg)
             for dists ∈ (dijkstra(g, i; dmax) for i ∈ 1:nvg)
         )
-    )
+    )'
 end
 
 censored_distmat(W::AbstractMatrix, dmax::Real; issymmetric=true) = censored_distmat(
