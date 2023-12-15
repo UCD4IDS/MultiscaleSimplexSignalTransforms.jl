@@ -9,3 +9,5 @@ data/tl_2014_us_county/tl_2014_us_county.shp
 data/minnesota/minnesota.json
 
 nbs/*backup*
+
+output/
