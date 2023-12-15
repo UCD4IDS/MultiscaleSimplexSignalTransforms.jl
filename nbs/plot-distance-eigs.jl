@@ -97,17 +97,30 @@ decomps = Dict(
 	for (k,M) in matrices
 )
 
-# ╔═╡ 71fd7e5c-04b2-483a-b53b-fb807e856c2e
-pos = Pos(xs, ys)
+# ╔═╡ ea14be67-4a57-45aa-a847-0365047bcf23
+g_edges = @chain begin
+	W
+	Graph
+	edges
+	[(e.src, e.dst) for e in _]
+	[ [(xs[i], ys[i]) for i in ei] for ei in _]
+	@. Shape
+end
 
-# ╔═╡ 3a78d48d-4484-4230-84a8-84090b3f85a6
-zreg = ZeroRegion(W)
+# ╔═╡ f84f60ef-4b6d-4b50-a7e9-88b802e613cb
+uscale(v) = extrema(v) |> ((m, M),) -> (v .- m) ./ (M-m)
 
-# ╔═╡ bde81468-8b03-4f75-8f2c-ce0a791683ee
-splot(zreg, decomps[:sym_d_proj].U[:,1], pos)
+# ╔═╡ 939defff-376a-48be-af29-e162a2d38ba1
+function plot_sv(v)
+	plot(g_edges; legend=false, axis=([], false), aspectratio=:equal, size=(400, 400))
+	scatter!(xs, ys, mz=v, msw=0, ms=4uscale(abs.(v)), c=:seismic)
+end
+
+# ╔═╡ cd0aff95-619f-4c71-b71a-4e52fff08b4b
+plot_sv(decomps[:sym_d_proj].U[:,1])
 
 # ╔═╡ b2ffd9bf-ff2e-4995-8bea-6270d8c5d8f3
-function save_splot(
+function save_sv_plot(
 	n;
 	is_directed, is_reciprocal, is_projected, from_end, use_left_sv
 )
@@ -115,20 +128,39 @@ function save_splot(
 	recsymbol = is_reciprocal ? :k : :d
 	projsymbol = is_projected ? :proj : :orig
 	handle = Symbol(dirsymbol, :_, recsymbol, :_, projsymbol)
-	fn = "../output/$handle.png"
 
-	source = (
+	svsymbol = use_left_sv ? :U : :V
+
+	ind = from_end ? size(W, 1)-n+1 : n
+	fn = "../output/$(handle)_$(svsymbol)_$ind.png"
+
+	signal = (
 		use_left_sv ? decomps[handle].U : decomps[handle].Vt'
-	)
+	)[:, ind]
 
-	signal = from_end ? source[:, end-n+1] : source[:, n]
-
-	# savefig(splot(zreg, signal, pos), fn)
-	splot(zreg, signal, pos)
+	fig = plot_sv(signal)
+	savefig(fig, fn)
+	# fig
 end
 
 # ╔═╡ 508853b8-0e30-409d-ad5b-621be6bcd6e0
-save_splot(4; is_directed=false, is_reciprocal=false, is_projected=true, use_left_sv=true, from_end=false)
+# save_splot(1; is_directed=true, is_reciprocal=false, is_projected=false, use_left_sv=true, from_end=true)
+
+# ╔═╡ c15f01cf-5d5d-4385-b42d-9abe94d81db3
+function save_all_sv_plots(nfirst, nlast)
+	for bools in Iterators.product(fill([true, false], 5)...)
+		is_directed, is_reciprocal, is_projected, from_end, use_left_sv = bools
+		n = from_end ? nlast : nfirst
+		for ni in 1:n
+			save_sv_plot(
+				ni; is_directed, is_reciprocal, is_projected, from_end, use_left_sv
+			)
+		end
+	end
+end
+
+# ╔═╡ eee7238c-1daf-4b07-9fc1-85fea61360cb
+save_all_sv_plots(8, 16)
 
 # ╔═╡ Cell order:
 # ╠═19746b80-9afb-11ee-38d4-43a96fc94583
@@ -146,8 +178,11 @@ save_splot(4; is_directed=false, is_reciprocal=false, is_projected=true, use_lef
 # ╠═152d2cdf-de1f-4ec2-9933-af4210c48d85
 # ╠═8c7bf95a-0f78-474c-995b-e2302cf8e54c
 # ╠═4fdfee57-3353-4fd2-8953-4d00ce9dea72
-# ╠═71fd7e5c-04b2-483a-b53b-fb807e856c2e
-# ╠═3a78d48d-4484-4230-84a8-84090b3f85a6
-# ╠═bde81468-8b03-4f75-8f2c-ce0a791683ee
+# ╠═ea14be67-4a57-45aa-a847-0365047bcf23
+# ╠═f84f60ef-4b6d-4b50-a7e9-88b802e613cb
+# ╠═939defff-376a-48be-af29-e162a2d38ba1
+# ╠═cd0aff95-619f-4c71-b71a-4e52fff08b4b
 # ╠═b2ffd9bf-ff2e-4995-8bea-6270d8c5d8f3
 # ╠═508853b8-0e30-409d-ad5b-621be6bcd6e0
+# ╠═c15f01cf-5d5d-4385-b42d-9abe94d81db3
+# ╠═eee7238c-1daf-4b07-9fc1-85fea61360cb
