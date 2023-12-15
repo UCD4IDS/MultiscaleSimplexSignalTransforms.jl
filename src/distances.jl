@@ -90,7 +90,10 @@ function censored_distmat(g::AbstractGraph, dmax::Real)
     )
 end
 
-censored_distmat(W::AbstractMatrix, dmax::Real) = censored_distmat(SimpleWeightedGraph(W), dmax)
+censored_distmat(W::AbstractMatrix, dmax::Real; issymmetric=true) = censored_distmat(
+    issymmetric ? SimpleWeightedGraph(W) : SimpleWeightedDiGraph(W),
+    dmax
+)
 
 distance_kernel(region::Region; kwargs...) = error("can only use Representation.Distance for k=0 for now")
 
@@ -99,7 +102,8 @@ function distance_kernel(
     subregion_inds::(Nothing | Vector{Int})=nothing,
     normalization::Normalization.T=Normalization.Weighted,
     withdistmat=false,
-    dmax=Inf
+    dmax=Inf,
+    issymmetric=true
 )
     W = @chain Graphs.weights(region.weights) begin
         ifelse.(
@@ -108,10 +112,17 @@ function distance_kernel(
             normalization == Normalization.Combinatorial ? 1.0 : _ .^ -1
         )
         isnothing(subregion_inds) ? _ : _[subregion_inds, subregion_inds]
-        Symmetric
     end
 
-    K = 0.5 * (isinf(dmax) ? -distmat(W) : censored_distmat(W, dmax)) |> Symmetric
+    if issymmetric
+        W = Symmetric(W)
+    end
+
+    K = 0.5 * (isinf(dmax) ? -distmat(W) : censored_distmat(W, dmax; issymmetric))
+
+    if issymmetric
+        K = Symmetric(K)
+    end
 
     d = Vector(sum(W, dims=2)[:]) .^ 0.5
     D = Diagonal(d)
@@ -126,4 +137,10 @@ function distance_kernel(
     withdistmat ? (K, kernel) : kernel
 end
 
-distance_kernel(X; kwargs...) = distance_kernel(ZeroRegion(X); kwargs...)
+distance_kernel(X; issymmetric=true, kwargs...) = distance_kernel(
+    ZeroRegion(
+        issymmetric ? SimpleWeightedGraph(X) : SimpleWeightedDiGraph(X);
+        issymmetric
+    );
+    issymmetric, kwargs...
+)

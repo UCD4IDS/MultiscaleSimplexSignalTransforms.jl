@@ -5,7 +5,7 @@ function splot(
 	c_vertices::Vector, c_edges::Vector, c_triangles::Vector, f::AbstractVector{R};
 	k::Int, xs::Vector{S}, ys::Vector{S},
 	clims=nothing,
-	size=nothing,
+	simpsize=nothing,
 	palette=:seismic,
 	tol=1e-12,
 	notribds=true,
@@ -18,9 +18,9 @@ function splot(
 	t_coor = [ [ (v_xs[i], v_ys[i]) for i∈t ] for t ∈ c_triangles ]
 
 	size = ifelse(
-		isnothing(size),
+		isnothing(simpsize),
 		(lw=6, ms=4),
-		(lw=size, ms=size)
+		(lw=simpsize, ms=simpsize)
 	)
 	isnode, isedge, istri = k.==0:2
 	isconst = diff(collect(extrema(f)))[1] < tol
@@ -66,7 +66,7 @@ function splot(
 	c_edges::Vector, f::AbstractVector{R};
 	k::Int=0, xs::Vector{S}, ys::Vector{S},
 	clims=nothing,
-	size=nothing,
+	simpsize=nothing,
 	palette=:seismic,
 	tol=1e-12,
 	scatterkwargs...
@@ -76,9 +76,9 @@ function splot(
 	e_coor = [ [ (xs[i], ys[i]) for i∈e ] for e ∈ c_edges ]
 
 	size = ifelse(
-		isnothing(size),
+		isnothing(simpsize),
 		(lw=1, ms=4),
-		(lw=1, ms=size)
+		(lw=1, ms=simpsize)
 	)
 	isconst = diff(collect(extrema(f)))[1] < tol
 
@@ -143,7 +143,7 @@ function splot_many(
 		repeatsimp.([c_vertices, c_edges, c_triangles])...,
 		[ fi for f ∈ fs for fi ∈ f ];
 		xs=repeat(xs, nf),
-		ys=repeatsimp(ys, -3), 
+		ys=repeatsimp(ys, -1.1 * diff(collect(extrema(ys)))[1]), 
 		k, kwargs...
 	)
 end
@@ -159,7 +159,7 @@ function splot_many(
 		repeatsimp(c_edges),
 		[ fi for f ∈ fs for fi ∈ f];
 		xs = repeat(xs, nf),
-		ys = repeatsimp(ys, -3),
+		ys = repeatsimp(ys, -1.1 * diff(collect(extrema(ys)))[1]),
 		k, kwargs...
 	)
 end

@@ -40,9 +40,10 @@ Base.show(io::IO, ::MIME"text/plain", region::R) where {R<:Region} = print(
     repr("text/plain", typeof(region); context=:compact => true)
 )
 
-struct ZeroRegion <: Region
-    weights::SimpleWeightedGraph
+struct ZeroRegion{G<:AbstractGraph} <: Region
+    weights::G
     diagmodifier::Float64 # the weak adj weight applies to all nodes, so it just modifies the diagonal
+    ZeroRegion(weights::G, diagmodifier::Float64) where {G<:AbstractGraph} = new{G}(weights, diagmodifier)
 end
 
 k(::ZeroRegion) = 0
@@ -57,7 +58,11 @@ boundaries(::ZeroRegion) = []
 hulls(region::ZeroRegion) = map(e -> Tuple(e)[1:2], edges(region.weights))
 
 function ZeroRegion(
-    g::AbstractGraph; hullweightfn=nothing, weakadjweight::Float64=0.0, subregion_inds=nothing
+    g::AbstractGraph;
+    hullweightfn=nothing,
+    weakadjweight::Float64=0.0,
+    subregion_inds=nothing,
+    issymmetric=true
 )
     if !isnothing(subregion_inds)
         g, _ = induced_subgraph(g, subregion_inds)
@@ -70,10 +75,12 @@ function ZeroRegion(
     #     g = SimpleGraph(Edge.(es))
     # end
 
+    graphfn = issymmetric ? SimpleWeightedGraph : SimpleWeightedDiGraph
+
     ZeroRegion(
         isnothing(hullweightfn) ?
-        SimpleWeightedGraph(g) :
-        SimpleWeightedGraph(getindex.(es, 1), getindex.(es, 2), hullweightfn.(es)),
+            graphfn(g) :
+            graphfn(getindex.(es, 1), getindex.(es, 2), hullweightfn.(es)),
         weakadjweight
     )
 end
