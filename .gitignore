@@ -11,3 +11,6 @@ data/minnesota/minnesota.json
 nbs/*backup*
 
 output/
+
+# don't track file dumps
+*.tgz
