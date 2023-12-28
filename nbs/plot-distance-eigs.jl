@@ -87,7 +87,7 @@ use_weights = false
 use_dmax_on_diag = true
 
 # ╔═╡ c04c85f9-727a-4032-99f3-9cc3ecb59be5
-dir_mod = true
+dir_mod = false
 
 # ╔═╡ eed4eca1-dab9-4675-b2a8-480404461153
 xs, ys = @chain begin
@@ -262,7 +262,7 @@ plot_sv(sparsevec(11:97, 1, nv(g)))
 	# 	for i in (1:n) .+ 0
 	# ]..., layout=(n,1)),
 	plot([
-		plot_sv(decomps[:dir_k_orig].Vt'[:,end-i+1])
+		plot_sv(decomps[:dir_d_proj].Vt'[:,i])
 		for i in (1:n) .+ 0
 	]..., layout=(n,1)),
 	# plot([
@@ -270,7 +270,7 @@ plot_sv(sparsevec(11:97, 1, nv(g)))
 	# 	for i in (1:n) .+ 0
 	# ]..., layout=(n,1)),
 	plot([
-		plot_sv(decomps[:dir_k_proj].Vt'[:,end-i+1])
+		plot_sv(decomps[:dir_k_proj].Vt'[:,i])
 		for i in (1:n) .+ 0
 	]..., layout=(n,1)),
 	size=(800,400n),
