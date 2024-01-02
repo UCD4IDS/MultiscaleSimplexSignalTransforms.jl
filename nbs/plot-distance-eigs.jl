@@ -148,6 +148,15 @@ begin
 	scatter!(eachcol(g_data[which_g].coor)..., ms=1)
 end
 
+# ╔═╡ a5e1c3de-bf11-4c1e-a240-c056501dc9d9
+function true_perturb_distmat(W)
+	xw = sparse(UpperTriangular(W))
+	for (i,j,_) in zip(findnz(xw)...)
+		xw[j,i] = dmax
+	end
+	Matrix(distmat(SimpleWeightedDiGraph(xw)))
+end
+
 # ╔═╡ 150a5f2a-5b79-4a9f-a09d-6a4da54c7fd4
 # begin
 # 	g_rec = SimpleWeightedGraph(
@@ -195,6 +204,9 @@ begin
 	Pn(n) = I - ones(n,n)/n
 	P(M::AbstractMatrix) = Pn(size(M, 1)) |> PP -> PP*M*PP
 end
+
+# ╔═╡ 3693845c-1983-41cd-96a8-14c92ce2d8ec
+xPDP = svd(P(true_perturb_distmat(W)))
 
 # ╔═╡ 8c7bf95a-0f78-474c-995b-e2302cf8e54c
 # our eight matrices
@@ -256,25 +268,38 @@ Knaive = svd(P(remove_diag!(1 ./xyz_dists)));
 plot_sv(sparsevec(11:97, 1, nv(g)))
 
 # ╔═╡ cd0aff95-619f-4c71-b71a-4e52fff08b4b
-1 |> n -> plot(
+5 |> n -> plot(
 	# plot([
 	# 	plot_sv(decomps[:dir_k_orig].U[:,end-i+1])
 	# 	for i in (1:n) .+ 0
 	# ]..., layout=(n,1)),
-	plot([
-		plot_sv(decomps[:dir_d_proj].Vt'[:,i])
-		for i in (1:n) .+ 0
-	]..., layout=(n,1)),
 	# plot([
 	# 	plot_sv(decomps[:dir_k_proj].U[:,end-i+1])
 	# 	for i in (1:n) .+ 0
 	# ]..., layout=(n,1)),
 	plot([
-		plot_sv(decomps[:dir_k_proj].Vt'[:,i])
+		plot_sv(decomps[:dir_d_proj].U[:,i])
+		for i in (1:n) .+ 0
+	]..., layout=(n,1)),
+	plot([
+		plot_sv(xPDP.U[:,i])
 		for i in (1:n) .+ 0
 	]..., layout=(n,1)),
 	size=(800,400n),
 	layout=(1,2)
+)
+
+# ╔═╡ 2351375a-ee39-40d0-8fbb-5ba0040e4335
+plot([
+	norm(v - sign(v[1])*sign(decomps[:dir_k_proj].U[1,i])*decomps[:dir_k_proj].U[:,i])
+	for (i,v) in enumerate(eachcol(decomps[:dir_k_proj].Vt'))
+])
+
+# ╔═╡ f6d49425-8009-455d-8084-b09ae65f8450
+7 |> n -> plot(
+	[
+		decomps[:dir_k_proj].U[:,n] decomps[:dir_k_proj].Vt'[:,n]
+	]
 )
 
 # ╔═╡ 434fd627-58e2-4fa0-b444-5f4cfd9bc709
@@ -371,6 +396,8 @@ end
 # ╠═6c3e4bf5-9f76-4c77-865f-6bd8a623a0dc
 # ╠═b7bd92c5-22a3-4b45-82e8-a4a4a3175bf7
 # ╠═2225db66-2fc5-4b77-8148-1b090592cbfc
+# ╠═a5e1c3de-bf11-4c1e-a240-c056501dc9d9
+# ╠═3693845c-1983-41cd-96a8-14c92ce2d8ec
 # ╠═150a5f2a-5b79-4a9f-a09d-6a4da54c7fd4
 # ╠═840eddb8-0182-4ccf-b1c6-5f035608bba1
 # ╠═cb47d3a4-2c21-4a30-a05a-d5ea0a0660f0
@@ -389,6 +416,8 @@ end
 # ╠═4f408f07-1a71-4658-bc24-71c989988529
 # ╠═4ae6a7c6-c910-40b5-ac07-1dad65180bff
 # ╠═cd0aff95-619f-4c71-b71a-4e52fff08b4b
+# ╠═2351375a-ee39-40d0-8fbb-5ba0040e4335
+# ╠═f6d49425-8009-455d-8084-b09ae65f8450
 # ╠═434fd627-58e2-4fa0-b444-5f4cfd9bc709
 # ╠═6e537699-2004-4388-af79-3c9ef5141a67
 # ╠═b2ffd9bf-ff2e-4995-8bea-6270d8c5d8f3

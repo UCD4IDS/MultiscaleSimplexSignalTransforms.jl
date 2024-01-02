@@ -4,6 +4,16 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+end
+
 # ╔═╡ e4618ea1-7d1c-43aa-a7d7-f848c4418e50
 using Pkg; Pkg.activate(".")
 
@@ -16,8 +26,12 @@ using LinearAlgebra, Chain, Graphs, SimpleWeightedGraphs, MultiscaleSimplexSigna
 # ╔═╡ b5012d98-8e25-4602-b6c9-25708f7b7817
 using Plots, GraphRecipes
 
+# ╔═╡ 1fedb179-88d0-4028-a3a9-775b75b62677
+using PlutoUI
+
 # ╔═╡ 85b06160-9ded-11ee-3e2e-a5ef3b35e93f
-a1, a2 = rand(2)
+a1, a2 = (rand(), 1e5)
+# a1, a2 = rand(2)
 
 # ╔═╡ 112e3f92-ffd5-4b98-8c4e-f6c529e2803b
 b1, b2 = rand(2)
@@ -180,6 +194,9 @@ end
 	_ * s2
 end
 
+# ╔═╡ d60e0229-523f-44f6-983c-70b7f5dc6681
+md"Proving the general case"
+
 # ╔═╡ 66a5fa4b-60e5-4754-9df9-f8f43054210b
 W = diagm(1 => rand(10), -1 => rand(10))
 
@@ -328,14 +345,67 @@ end
 function check_grid()
 	# g = Graphs.grid((20,25))
 	g = randomtree(20)
-	W = UpperTriangular(adjacency_matrix(g))
-	B = distmat(DiGraph(W))
-	L = spmap(x->1/x, W+W') |> WW -> Diagonal(sum(WW, dims=2)[:]) - WW
-	P(B)*L-L*P(B) |> norm
+	W = adjacency_matrix(g) .* rand(Float64, (nv(g), nv(g)))
+	gwt = SimpleWeightedDiGraph(W)
+	pg = cartesian_product(gwt, gwt)
+	Wp = weights(pg)
+	B = distmat(pg)
+	L = spmap(x->1/x, Wp+Wp') |> WW -> Diagonal(sum(WW, dims=2)[:]) - WW
+	P(B), L, pg
+	# PBP*L-L*PBP |> norm
 end
 
 # ╔═╡ dd451116-f477-4ce8-966a-cdb366eed45e
-check_grid()
+check_grid() |> ((M, L, pg),) -> (
+	norm(M-M'),
+	norm(M*L-L*M),
+	weights(pg)[1:8,1:8]
+)
+
+# ╔═╡ b3f885ee-f18e-4f85-b560-3587959b3082
+@chain begin
+	randomtree(10)
+	UpperTriangular(adjacency_matrix(_) .* rand(Float64, (nv(_), nv(_))))
+	SimpleWeightedDiGraph
+	distmat
+	# censored_distmat(_, 1e5)
+	# _+_'
+	# P
+	# pinv
+	# map(x -> (abs(x) < 1e-8 ? 0 : x), _)
+end
+
+# ╔═╡ 7cc481dc-27f6-4700-9878-aae752f05a32
+@bind M Slider(0:10)
+
+# ╔═╡ 8e7b4891-0767-47e4-b6c4-12f7d019fc2d
+np = 10
+
+# ╔═╡ 2efc6106-93e2-4468-ae82-4bc26451a413
+M
+
+# ╔═╡ d95376d3-0472-4f34-aa41-72906c4b2217
+@chain begin 10^M
+	(
+		-(
+			diagm(np, np, Dict(i=>i*ones(np-i) for i ∈ 1:np-1)...) +
+			_*LowerTriangular(ones(np, np) - I)
+		),
+		-(
+			diagm(np, np, Dict(i=>i*ones(np-i) for i ∈ 1:np-1)...) +
+			diagm(np, np, Dict(-i=>i*_*ones(np-i) for i ∈ 1:np-1)...)
+		)
+	)
+	@. P
+	@. svd
+	plot(
+		plot(_[1].Vt' .* sign.(_[1].Vt'[1,:]')),
+		plot(_[2].Vt' .* sign.(_[2].Vt'[1,:]')),
+		legend=false,
+		xaxis=false, yaxis=false,
+		ylims=(-1,1)
+	)
+end
 
 # ╔═╡ Cell order:
 # ╠═e4618ea1-7d1c-43aa-a7d7-f848c4418e50
@@ -376,6 +446,7 @@ check_grid()
 # ╟─62d73438-8ad9-47e7-8ab5-d60b3342c54d
 # ╠═7a07e29b-27ab-4c75-bba6-525179f6396b
 # ╠═bb054392-49d1-42c0-93f5-07c8cbd000aa
+# ╟─d60e0229-523f-44f6-983c-70b7f5dc6681
 # ╠═66a5fa4b-60e5-4754-9df9-f8f43054210b
 # ╠═a3448bae-501d-4d4e-b1a8-5874f1616a95
 # ╠═8ec4b42e-a539-4469-946d-824632d88adf
@@ -414,3 +485,9 @@ check_grid()
 # ╠═84271ee4-5a1f-4812-870d-a204592a38f9
 # ╠═c46a86f7-34d8-4960-9318-cf10fb4a7665
 # ╠═dd451116-f477-4ce8-966a-cdb366eed45e
+# ╠═b3f885ee-f18e-4f85-b560-3587959b3082
+# ╠═1fedb179-88d0-4028-a3a9-775b75b62677
+# ╠═7cc481dc-27f6-4700-9878-aae752f05a32
+# ╠═8e7b4891-0767-47e4-b6c4-12f7d019fc2d
+# ╠═2efc6106-93e2-4468-ae82-4bc26451a413
+# ╠═d95376d3-0472-4f34-aa41-72906c4b2217
