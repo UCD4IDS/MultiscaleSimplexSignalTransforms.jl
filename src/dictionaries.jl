@@ -35,24 +35,24 @@ root(transform::MSST) = root(part(transform))
 clear!(transform::MSST) = clear!(root(transform))
 
 Base.getindex(transform::MSST, jkl...) = getindex(inds(transform), jkl...)
-Base.getindex(transform::MSST, II::NTuple{3, Int}) = getindex(transform, II...)
+Base.getindex(transform::MSST, II::NTuple{3,Int}) = getindex(transform, II...)
 Base.show(io::IO, ::MIME"text/plain", transform::MSST) = print(
     io,
-    repr("text/plain", typeof(transform); context = :compact=>true)
+    repr("text/plain", typeof(transform); context=:compact => true)
 )
 
 # intended to be part of the API, but not currently used, because
 # - basis is only ever constructed when initializing the first MSST instance for a given complex
 # - basis is automatically constructed on this initialization, for both kGHWT and kHGLET
 basis!(
-    T::Type{<:MSST}, part::SCPartition, signal::PartValType = 1.0
+    T::Type{<:MSST}, part::SCPartition, signal::PartValType=1.0
 ) = transform!(T, part, BasisSignal(signal, n(part)))
 
 analyze(
     transform::MSST, signal::PartValType
 ) = typeof(transform)(deepcopy(part(transform)), CoefSignal(signal); dict=transform)
 
-function best_basis(transform::MSST, signal::PartValType; p=0.5, cost=v->norm(v,p))
+function best_basis(transform::MSST, signal::PartValType; p=0.5, cost=v -> norm(v, p))
     coefs = analyze(transform, signal)
 
     function compare_bases(node, lout, rout)
@@ -62,7 +62,7 @@ function best_basis(transform::MSST, signal::PartValType; p=0.5, cost=v->norm(v,
 
         isleaf(node) && return (; locs=[jk], coefs=new_coefs)
 
-        join_locs  = [lout.locs; rout.locs]
+        join_locs = [lout.locs; rout.locs]
         join_coefs = [lout.coefs; rout.coefs]
         if length(new_coefs) != length(join_coefs)
             @info ("jk:", jk)
@@ -70,19 +70,19 @@ function best_basis(transform::MSST, signal::PartValType; p=0.5, cost=v->norm(v,
             @info new_coefs
             @info ("coefs:", length(new_coefs), length(join_coefs))
             @info node.sinds
-            @info coefs[jk...,:]
+            @info coefs[jk..., :]
             error("bah")
         end
 
         cost(new_coefs) < cost(join_coefs) ?
-            (; locs=[jk], coefs=new_coefs) :
-            (; locs=join_locs, coefs=join_coefs)
+        (; locs=[jk], coefs=new_coefs) :
+        (; locs=join_locs, coefs=join_coefs)
     end
 
     recurse_tree(compare_bases)(root(coefs))
 end
 
-function alt_best_basis(transform::MSST, signal::PartValType; p=0.5, cost=v->norm(v,p))
+function alt_best_basis(transform::MSST, signal::PartValType; p=0.5, cost=v -> norm(v, p))
     coefs = analyze(transform, signal)
 
     function compare_bases(node, lout, rout)
@@ -113,18 +113,18 @@ struct kGHWT{P<:SCPartition} <: MSST
     part::P
     inds::TagArray
     function kGHWT(
-        part::P, signal::SimplicialSignal=BasisSignal(1.0, n(part)); dict::(kGHWT|Nothing)=nothing
-    ) where P
+        part::P, signal::SimplicialSignal=BasisSignal(1.0, n(part)); dict::(kGHWT | Nothing)=nothing
+    ) where {P}
         transform!(isnothing(dict) ? kGHWT : dict, part, signal)
         new{P}(part, index_partitions(root(part)))
     end
 end
 
-kGHWT{P}(args...; kwargs...) where P = kGHWT(args...; kwargs...)
+kGHWT{P}(args...; kwargs...) where {P} = kGHWT(args...; kwargs...)
 
 kGHWT(
     region::R, subr::SubRepresentation.T=SubRepresentation.Submatrix; kwargs...
-) where R<:Region = kGHWT(SCPartition(subr, region; kwargs...))
+) where {R<:Region} = kGHWT(SCPartition(subr, region; kwargs...))
 
 part(transform::kGHWT) = transform.part
 inds(transform::kGHWT) = transform.inds
@@ -138,33 +138,33 @@ function kghwt!(node::PartitionTree, signal::SimplicialSignal)
     end
 
     nl = partlen(node.lchild)
-	nr = partlen(node.rchild)
+    nr = partlen(node.rchild)
 
-	fl = node.lchild.fvals
-	fr = node.rchild.fvals
-	
-	node.fvals[0] = (sqrt(nl) .* val(fl[0]) + sqrt(nr) .* val(fr[0])) ./ sqrt(nl + nr)
-	node.fvals[1] = (sqrt(nr) .* val(fl[0]) - sqrt(nl) .* val(fr[0])) ./ sqrt(nl + nr)
+    fl = node.lchild.fvals
+    fr = node.rchild.fvals
 
-	for ℓ ∈ delete!(keys(fl) ∪ keys(fr), 0)
-		if haskey(fl, ℓ)
-			if haskey(fr, ℓ)
-				node.fvals[2ℓ]   = (val(fl[ℓ]) .+ val(fr[ℓ])) ./ sqrt(2)
-				node.fvals[2ℓ+1] = (val(fl[ℓ]) .- val(fr[ℓ])) ./ sqrt(2)
-			else
-				node.fvals[2ℓ] = val(fl[ℓ])
-			end
-		else
-			node.fvals[2ℓ] = val(fr[ℓ])
-		end
-	end
+    node.fvals[0] = (sqrt(nl) .* val(fl[0]) + sqrt(nr) .* val(fr[0])) ./ sqrt(nl + nr)
+    node.fvals[1] = (sqrt(nr) .* val(fl[0]) - sqrt(nl) .* val(fr[0])) ./ sqrt(nl + nr)
+
+    for ℓ ∈ delete!(keys(fl) ∪ keys(fr), 0)
+        if haskey(fl, ℓ)
+            if haskey(fr, ℓ)
+                node.fvals[2ℓ] = (val(fl[ℓ]) .+ val(fr[ℓ])) ./ sqrt(2)
+                node.fvals[2ℓ+1] = (val(fl[ℓ]) .- val(fr[ℓ])) ./ sqrt(2)
+            else
+                node.fvals[2ℓ] = val(fl[ℓ])
+            end
+        else
+            node.fvals[2ℓ] = val(fr[ℓ])
+        end
+    end
 
     nothing
 end
 
 # forming a basis requires performing the hierarchical partition
 transform!(::Type{kGHWT}, part::SCPartition, signal::BasisSignal) = hierarchical_partition!(
-    part; recurse_after_partition = (node, _, _) -> kghwt!(node, signal)
+    part; recurse_after_partition=(node, _, _) -> kghwt!(node, signal)
 )
 
 # if just analyzing, only perform the tree recursion
@@ -180,39 +180,39 @@ struct kHGLET{P<:SCPartition} <: MSST
     part::P
     inds::TagArray
     function kHGLET(
-        part::P, signal::SimplicialSignal=BasisSignal(1.0, n(part)); dict::(kHGLET|Nothing)=nothing
-    ) where P
+        part::P, signal::SimplicialSignal=BasisSignal(1.0, n(part)); dict::(kHGLET | Nothing)=nothing
+    ) where {P}
         transform!(isnothing(dict) ? kHGLET : dict, part, signal)
         new{P}(part, index_partitions(root(part)))
     end
 end
 
-kHGLET{P}(args...; kwargs...) where P = kHGLET(args...; kwargs...)
+kHGLET{P}(args...; kwargs...) where {P} = kHGLET(args...; kwargs...)
 
 kHGLET(
     region::R, subr::SubRepresentation.T=SubRepresentation.Submatrix; kwargs...
-) where R<:Region = kHGLET(SCPartition(subr, region; basis=Basis.Entire, kwargs...))
+) where {R<:Region} = kHGLET(SCPartition(subr, region; basis=Basis.Entire, kwargs...))
 
 part(transform::kHGLET) = transform.part
 inds(transform::kHGLET) = transform.inds
 
 function khglet!(
-    node::PartitionTree; basis::(M|Nothing), n::Int
-) where M<:AbstractArray
+    node::PartitionTree; basis::(M | Nothing), n::Int
+) where {M<:AbstractArray}
     isnothing(basis) && return
     node.fvals = TagDict(
-        i-1 => Vector(sparsevec(node.sinds, c, n))
+        i - 1 => Vector(sparsevec(node.sinds, c, n))
         for (i, c) = enumerate(eachcol(basis))
     )
 end
 
 # currently forming a basis with kHGLET ignores any input signal
 transform!(::Type{kHGLET}, part::SCPartition, ::BasisSignal) = hierarchical_partition!(
-    part; iterate_with_partition = khglet!
+    part; iterate_with_partition=khglet!
 )
 
 # analyzing requires taking inner products against each basis function
-transform!(::Type{kHGLET}, part::SCPartition, signal::CoefSignal) = 
+transform!(::Type{kHGLET}, part::SCPartition, signal::CoefSignal) =
     error("Producing kHGLET coefficients requires an existing dictionary")
 
 # ignore existing dictionary when forming a basis
