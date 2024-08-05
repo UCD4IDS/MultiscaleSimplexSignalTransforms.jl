@@ -20,7 +20,7 @@ struct SubmatrixPartition{M<:AbstractMatrix} <: SCPartition
     ) where {R<:Region}
         M = @match representation begin
             $(Representation.KLaplacian) => k_laplacian(region; normalization, repr_kwargs...)
-            # Representation.Distance => distance_kernel(region; normalization, repr_kwargs...)
+            # $(Representation.Distance) => distance_kernel(region; normalization, repr_kwargs...)
             $(Representation.Distance) => error("can't use Submatrix Subrepresentation on a Distance Representation")
         end
         new{typeof(M)}(PartitionTree(n_simp(region)), M, representation, basis, input, method, eigenmethod)

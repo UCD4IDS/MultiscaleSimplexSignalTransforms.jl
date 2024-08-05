@@ -79,8 +79,8 @@ function ZeroRegion(
 
     ZeroRegion(
         isnothing(hullweightfn) ?
-            graphfn(g) :
-            graphfn(getindex.(es, 1), getindex.(es, 2), hullweightfn.(es)),
+        graphfn(g) :
+        graphfn(getindex.(es, 1), getindex.(es, 2), hullweightfn.(es)),
         weakadjweight
     )
 end
