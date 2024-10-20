@@ -1,7 +1,7 @@
 name = "MultiscaleSimplexSignalTransforms"
 uuid = "d9cc96d6-3a18-48ba-a621-865d77ea2931"
 authors = ["Eugene Shvarts\n <eugene.shvarts@gmail.com>"]
-version = "0.5.1"
+version = "0.5.2"
 
 [deps]
 Arpack = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"

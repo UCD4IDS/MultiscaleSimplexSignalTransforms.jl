@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.27
+# v0.19.40
 
 using Markdown
 using InteractiveUtils
@@ -10,8 +10,8 @@ using Pkg; Pkg.activate(".")
 # ╔═╡ 27a51fc5-e9cd-4194-83c2-0f59ae68ea07
 using Graphs, MultiscaleSimplexSignalTransforms, Makie, Unzip, Meshes, MeshViz, Arpack
 
-# ╔═╡ 4c524f1b-971c-46e0-9713-056459ecdb1f
-using WGLMakie
+# ╔═╡ 531ba901-27cf-4992-8006-e3e92b2c1f3c
+using GLMakie
 
 # ╔═╡ 633a515b-c76d-4662-8eb6-93968aa5eab7
 using Chain: @chain
@@ -92,8 +92,8 @@ function unitsphere(subdivissions::Int64)
 end
 end
 
-# ╔═╡ 531ba901-27cf-4992-8006-e3e92b2c1f3c
-# using GLMakie
+# ╔═╡ 4c524f1b-971c-46e0-9713-056459ecdb1f
+# using WGLMakie
 
 # ╔═╡ ec72e9fb-a7ae-4fa6-be05-e39dc81e1f96
 # ts = [
@@ -149,11 +149,11 @@ end
 # ╔═╡ 4bbd0db0-bf34-49de-9de7-33662aa00bf1
 
 
-# ╔═╡ 3ed9a4a4-dff6-4d7f-96d9-21f6e49f8fe5
-
-
 # ╔═╡ 321d56ca-b530-4078-8606-bb1e287925c9
 S = unitsphere(2)
+
+# ╔═╡ 3ed9a4a4-dff6-4d7f-96d9-21f6e49f8fe5
+S.vertices[1]
 
 # ╔═╡ c50271e1-d29f-498d-9120-e566ae17bdb3
 typeof(S)
@@ -197,10 +197,22 @@ part = kGHWT(region)
 # plot(Λ)
 
 # ╔═╡ cb48ea58-29e9-4dc4-8053-152e5f3cad36
-# scatter3d([getindex.(S.vertices, i) for i in 1:3]..., ms=1, mz=part[1,0,1], legend=false)
+# meshscatter([getindex.(S.vertices, i) for i in 1:3]..., ms=1, )
 
 # ╔═╡ d9c6dc5e-3c07-4c83-bd67-5e098d46a61f
 # plot(L)
+
+# ╔═╡ 74cbb18b-a021-4c32-802c-02a1a5ef2fe6
+stereomap = (x, y, z) -> abs(z) < 1e-6 ? (0,0) : (x/z, y/z)
+
+# ╔═╡ 1de777ef-46d0-4103-9b77-a9df44a1f008
+stereomap(1,2,0)
+
+# ╔═╡ c0552379-1f0f-47f5-8402-cd7c2a3672bb
+scatter([stereomap(s...) for s in S.vertices])
+
+# ╔═╡ 1f170852-71cb-4651-803a-fa34984d6b06
+[stereomap(s...) for s in S.vertices]
 
 # ╔═╡ Cell order:
 # ╠═1bf3bd34-f03d-11ed-31d2-d5935d3e207d
@@ -230,3 +242,7 @@ part = kGHWT(region)
 # ╠═a7e2a5bd-9a87-4cd8-a140-38f9c8e260a5
 # ╠═cb48ea58-29e9-4dc4-8053-152e5f3cad36
 # ╠═d9c6dc5e-3c07-4c83-bd67-5e098d46a61f
+# ╠═74cbb18b-a021-4c32-802c-02a1a5ef2fe6
+# ╠═1de777ef-46d0-4103-9b77-a9df44a1f008
+# ╠═c0552379-1f0f-47f5-8402-cd7c2a3672bb
+# ╠═1f170852-71cb-4651-803a-fa34984d6b06

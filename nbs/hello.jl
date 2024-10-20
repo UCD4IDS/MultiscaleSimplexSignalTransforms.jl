@@ -5,8 +5,7 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ d8cba18c-2f63-11ee-062b-337a52a86175
-using Pkg;
-Pkg.activate(".");
+using Pkg; Pkg.activate(".");
 
 # ╔═╡ 8b08d2ea-9c62-40a4-b1d7-f2fd86a6118e
 using Revise
@@ -41,7 +40,7 @@ pl = f -> splot(
     xs=collect(Float64.(1:n)),
     ys=zeros(n),
     palette=:redblue,
-    size=10
+    simpsize=10
 )
 
 # ╔═╡ b8791d74-0008-455b-aaef-99118f0571be
@@ -50,7 +49,7 @@ pls = M -> splot_many(
     xs=collect(Float64.(1:n)),
     ys=zeros(n),
     palette=:redblue,
-    size=10
+    simpsize=5
 )
 
 # ╔═╡ a9102099-b4eb-4842-8c18-bb1761243c7f
