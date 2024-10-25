@@ -123,9 +123,11 @@ end
 
 splot(
     region::ZeroRegion, f::AbstractVector{R}; k=0, kwargs...
-) where {R<:Real} = splot(
-    map(e -> Tuple(e)[1:2], edges(region.weights)), f; k, kwargs...
-)
+) where {R<:Real} = splot(hulls(region), f; k, kwargs...)
+
+splot(
+    region::BipartiteRegion, f::AbstractVector{R}; k=0, kwargs...
+) where {R<:Real} = splot(hulls(region), f; k, kwargs...)
 
 function splot_many(
     region::KRegion{KL,K}, fs::AbstractVector{R}...; xs, ys, k=KL, kwargs...

@@ -60,7 +60,7 @@ function best_basis(transform::MSST, signal::PartValType; p=0.5, cost=v -> norm(
         # new_coefs = coefs[jk..., :]
         new_coefs = val.(values(node.fvals))
 
-        isleaf(node) && return (; locs=[jk], coefs=new_coefs)
+        is_trivial_leaf(part(transform), node) && return (; locs=[jk], coefs=new_coefs)
 
         join_locs = [lout.locs; rout.locs]
         join_coefs = [lout.coefs; rout.coefs]
@@ -79,7 +79,7 @@ function best_basis(transform::MSST, signal::PartValType; p=0.5, cost=v -> norm(
         (; locs=join_locs, coefs=join_coefs)
     end
 
-    recurse_tree(compare_bases)(root(coefs))
+    recurse_tree(compare_bases, coefs)(root(coefs))
 end
 
 function alt_best_basis(transform::MSST, signal::PartValType; p=0.5, cost=v -> norm(v, p))
@@ -88,7 +88,7 @@ function alt_best_basis(transform::MSST, signal::PartValType; p=0.5, cost=v -> n
     function compare_bases(node, lout, rout)
         new_locs = Dict(node.sinds => node.fvals)
 
-        isleaf(node) && return new_locs
+        is_trivial_leaf(part(transform), node) && return new_locs
 
         new_coefs = val.(values(node.fvals))
 
@@ -105,7 +105,7 @@ function alt_best_basis(transform::MSST, signal::PartValType; p=0.5, cost=v -> n
         cost(new_coefs) < cost(join_coefs) ? new_locs : join_locs
     end
 
-    recurse_tree(compare_bases)(root(coefs))
+    recurse_tree(compare_bases, coefs)(root(coefs))
 end
 
 
@@ -129,10 +129,11 @@ kGHWT(
 part(transform::kGHWT) = transform.part
 inds(transform::kGHWT) = transform.inds
 
-function kghwt!(node::PartitionTree, signal::SimplicialSignal)
+# todo: get rid of part dependence; need to refactor `is_trivial_leaf`
+function kghwt!(node::PartitionTree, signal::SimplicialSignal, part::SCPartition)
     node.fvals = TagDict()
 
-    if isleaf(node)
+    if is_trivial_leaf(part, node)
         node.fvals[0] = haar_repr(signal, node.sinds[1])
         return
     end
@@ -164,12 +165,13 @@ end
 
 # forming a basis requires performing the hierarchical partition
 transform!(::Type{kGHWT}, part::SCPartition, signal::BasisSignal) = hierarchical_partition!(
-    part; recurse_after_partition=(node, _, _) -> kghwt!(node, signal)
+    part; recurse_after_partition=(node, _, _) -> kghwt!(node, signal, part)
 )
 
 # if just analyzing, only perform the tree recursion
 transform!(::Type{kGHWT}, part::SCPartition, signal::CoefSignal) = recurse_tree(
-    (node, _, _) -> kghwt!(node, signal)
+    (node, _, _) -> kghwt!(node, signal, part),
+    part
 )(root(part))
 
 # if we receive an existing dictionary for kGHWT, ignore it

@@ -7,7 +7,7 @@ export
 
 # how are the adjacencies and degrees represented as a Laplacian-like matrix?
 # leaving room for, e.g., method using 0-lap on graph formed by k-simplices
-@enumx Representation KLaplacian Distance
+@enumx Representation KLaplacian Distance Dhillon
 
 # what is the technique used to construct representation matrices
 # on the partition sub-complexes?
@@ -66,14 +66,14 @@ function partition!(
     part::P,
     node::PartitionTree=root(part)
 ) where {P<:SCPartition}
-    if isleaf(node)
-        return ([0.0], [1.0])
+    if is_trivial_leaf(part, node)
+        return (zeros(length(node.sinds)), I(length(node.sinds)))
     end
 
-    if partlen(node) == 2
+    if is_trivial_pair(part, node)
         lchild!(node, PartitionTree(; sinds=[node.sinds[1]]))
         rchild!(node, PartitionTree(; sinds=[node.sinds[2]]))
-        return ([0.0, 0.0], [1.0 0.0; 0.0 1.0])
+        return (zeros(length(node.sinds)), I(length(node.sinds)))
     end
 
     # SCPartition implementation-specific partitioning should
@@ -99,15 +99,15 @@ iterate_tree(iter_fn, part_fn, part, n) = function (tsn)
     (tsn.node.sinds, vals)
 end
 
-recurse_tree(recurse_fn) = function recurse_tree_inner(node)
-    lout, rout = isleaf(node) ?
+recurse_tree(recurse_fn, part) = function recurse_tree_inner(node)
+    lout, rout = is_trivial_leaf(part, node) ?
                  (nothing, nothing) :
                  recurse_tree_inner.(children(node))
     recurse_fn(node, lout, rout)
 end
 
-resolve_missing_values(eigvals) = function (node, _, _)
-    if !isleaf(node) && isnothing(node.fvals)
+resolve_missing_values(eigvals, part) = function (node, _, _)
+    if !is_trivial_leaf(part, node) && isnothing(node.fvals)
         nind = findfirst(v -> v[1] == node.sinds, eigvals)
         lind = findfirst(v -> v[1] == node.lchild.sinds, eigvals)
         rind = findfirst(v -> v[1] == node.rchild.sinds, eigvals)
@@ -141,8 +141,8 @@ function hierarchical_partition!(
     itercond = _ -> true #tsn -> partlen(tsn.node) > 1
     eigvals = dfs(partfun, root(part); itercond, maxlevel)
 
-    recurse_f && recurse_tree(recurse_after_partition)(root(part))
-    !no_f && recurse_tree(resolve_missing_values(eigvals))(root(part))
+    recurse_f && recurse_tree(recurse_after_partition, part)(root(part))
+    !no_f && recurse_tree(resolve_missing_values(eigvals, part), part)(root(part))
 end
 
 function resolve_zeros_randomly!(signs::Vector; tol=1e-14, check_nonuniform=false)
@@ -187,12 +187,26 @@ function fiedler_eigs(representation::Representation.T, basis::Basis.T, eigenmet
     whicheig, eignum = @match representation begin
         $(Representation.KLaplacian) => (:SM, 2)
         $(Representation.Distance) => (:LR, 1)
+        $(Representation.Dhillon) => (:LR, 2)
     end
 
     entirebasis = basis == Basis.Entire
     keeptrying = eigenmethod == EigenMethod.Positive
     keeptrying && entirebasis && error("EigenMethod.Positive and Basis.Entire are incompatible")
     base_eignum = eignum
+    
+    # this representation is truncated wrt other possible parameters
+    if representation == Representation.Dhillon
+        function topsvd(M, eignum=eignum)
+            if minimum(size(M)) == eignum
+                decomp = svd(M)
+            else
+                decomp = svds(M; nsv=eignum, maxiter)[1]
+            end
+            return decomp.S, [decomp.U ; decomp.Vt'], eignum
+        end
+        return topsvd
+    end
 
     function poseigs(M, eignum=eignum; keeptrying=keeptrying, entirebasis=entirebasis)
         takeall = entirebasis || eignum > size(M, 1) / 4

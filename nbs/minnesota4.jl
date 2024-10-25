@@ -1,12 +1,11 @@
 ### A Pluto.jl notebook ###
-# v0.19.23
+# v0.19.40
 
 using Markdown
 using InteractiveUtils
 
 # ╔═╡ 6b6b348c-b9b5-11ed-2dd1-811b6386fcab
-using Pkg;
-Pkg.activate(".");
+using Pkg; Pkg.activate(".");
 
 # ╔═╡ b2d5ecf8-66c7-476c-9c19-aa250f1e2247
 using Revise

@@ -65,6 +65,17 @@ FullPartition(
 root(part::FullPartition) = part.root
 n(part::FullPartition) = partlen(root(part))
 
+function is_trivial_leaf(part::FullPartition, node::PartitionTree)
+    if part.representation == Representation.Dhillon
+        I, J = separate_rows_cols(node.sinds, part.matrix)
+        return length(I) == 1 || length(J) == 1
+    end
+
+    return isleaf(node)
+end
+
+is_trivial_pair(::FullPartition, node::PartitionTree) = partlen(node) == 2
+
 function _partition!(part::FullPartition, node::PartitionTree)
     region = part.regionfn(complex=part.complex, subregion_inds=node.sinds)
 
